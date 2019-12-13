@@ -1,4 +1,5 @@
 from django.db import models
+# from django.db.models import F
 __doc__ ="""
 created by Ali Najafi on 12/13/2019 at 12:39 Am
 """
@@ -24,6 +25,30 @@ class CoursePanel(models.Model):
     "rekita_users.Student",
 
     )
+
+    date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"""
+        {self.lesson.name}-->{self.master.user.first_name}
+        {self.master.user.last_name} and ({self.objects.student_set.count()}) student/s"""
+    @classmethod
+    def join_lesson(cls,user,key_code):
+        """
+        this methode is for students who want
+        to join course panel via key code.
+        if CoursePanel didnt find it returns False
+        else it returns True and add student to CoursePanel
+        """
+        try:
+            student = user.F('student')
+            cp = cls.objects.get(key_code = key_code)
+            cp.objects.student_set.add(student)
+            return True
+        except models.ObjectDoesNotExist:
+            return False
+
+
 
 class Task(models.Model):
     description = models.CharField(max_length = 5000)
@@ -67,4 +92,3 @@ class Response(models.Model):
     def directory(self):
         main_dir = self.student.get_main_dir()
         return f'{main_dir}/responses/response_{self.date}'
-        
