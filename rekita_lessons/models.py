@@ -26,7 +26,7 @@ class CoursePanel(models.Model):
 
     )
 
-    date = models.DateTimeField(auto_now_add=True)
+    date_created = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"""
@@ -50,6 +50,15 @@ class CoursePanel(models.Model):
 
 
 
+def default_deadline(self):
+    from django.utils import timezone
+    delta = timezone.timedelta(days=7)
+    return timezone.now() + delta
+
+def directory(instance,file_name):
+    main_dir = instance.creator.get_main_dir()
+    return f'{main_dir}/{instance.cp.lesson.name}/task_{instance.id}/attach/{file_name}'
+
 class Task(models.Model):
     description = models.CharField(max_length = 5000)
     dead_line = models.DateTimeField(
@@ -69,9 +78,10 @@ class Task(models.Model):
     on_delete=models.CASCADE
     )
 
-    def directory(self):
-        main_dir = slef.creator.get_main_dir()
-        return f'{main_dir}/{self.cp.lesson.name}/task_{self.id}/attach'
+
+def directory_res(instance,f_name):
+    main_dir = instance.student.get_main_dir()
+    return f'{main_dir}/responses/response_{instance.date}/{f_name}'
 
 class Response(models.Model):
     task = models.ForeignKey(
@@ -85,10 +95,6 @@ class Response(models.Model):
     )
     date = models.DateTimeField(auto_now_add = True)
     file = models.FileField(
-    upload_to=directory
+    upload_to=directory_res
     )
     description = models.TextField(max_length=5000)
-
-    def directory(self):
-        main_dir = self.student.get_main_dir()
-        return f'{main_dir}/responses/response_{self.date}'

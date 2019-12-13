@@ -15,10 +15,14 @@ class Person(models.Model):
 
     join_date = models.DateTimeField(auto_now_add=True)
 
-    class Meta(models.Model):
-        abstract = True
+
+def get_image(instance,f_name):
+    return f'{instance.get_main_dir()}/picture/{f_name}'
 
 class Student(Person):
+    image = models.ImageField(
+    upload_to = get_image
+    )
     stid = models.IntegerField(10)
     uni = models.ForeignKey(
     "University",
@@ -34,11 +38,11 @@ class Student(Person):
         return f'students/student_{self.id}'
 
     def send_response(self,task_id,*args,**kwargs):
-        """
-            this method is for sending the response
-            to an exercise(Task). if the task DoesNotExists it returns False
+            """
+                this method is for sending the response
+                to an exercise(Task). if the task DoesNotExists it returns False
 
-        """
+            """
             if type(cp_id) == int:
                 try:
                     task = lesson_model.Task.objects.get(id = task_id)
@@ -49,8 +53,18 @@ class Student(Person):
                     return True
                 except models.ObjectDoesNotExist:
                     return False
-             else:
-                return False
+            else:
+                 return False
+
+
+    def get_courspanels(self):
+        return self.objects.coursepanel_set.order_by('-date_created')
+    def get_std_lessons_dict(self):
+        return self.get_courspanels().values('lesson')
+    def get_responses(self):
+        return self.objects.response_set
+    def get_masters_dict(self):
+        return self.get_courspanels().values('master')
 
 
 
@@ -86,8 +100,15 @@ class Master(Person):
                 return True
             except models.ObjectDoesNotExist:
                 return False
-         else:
+        else:
             return False
+    def get_courspanels(self):
+        return self.objects.coursepanel_set
+    def get_students_dict(self):
+        return self.get_courspanels().values('students')
+    def get_tasks(self):
+        return self.objects.task_set
+
 
 class University(models.Model):
     name = models.CharField(max_length = 1000)
@@ -97,7 +118,7 @@ class University(models.Model):
 
 class Field(models.Model):
 
-    name = models.CharField(max_length = 256)
+    name = models.CharField(max_length = 256,unique=True)
     level = models.CharField(max_length = 256)
 
 class Attribute(models.Model):
@@ -126,8 +147,26 @@ class Lesson(models.Model):
     )
 
     description = models.TextField(max_length=5000)
-    term_choice = [('9798'),('97-98'),('9899'),('98-99')]
+    term_choice = [('9798','97-98'),('9899','98-99')]
     term = models.CharField(choices=term_choice,max_length=50)
+
+    def get_courspanel(self):
+        return self.objects.coursepanel
+    def get_master(self):
+        return self.get_courspanel().master
+    def get_students(self):
+        return self.get_courspanel().F(get)
+
+
+
+def get_source_image(instance,f_name):
+    main_dir = 'lessons/source_%d/'%instance.id
+    return main_dir + f'image/{f_name}'
+
+def  get_source_file(instance,f_name):
+    main_dir = 'lessons/source_%d/'%instance.id
+    return main_dir + f'file/{f_name}'
+
 
 class Source(models.Model):
     image = models.ImageField(
@@ -138,11 +177,3 @@ class Source(models.Model):
     )
     description = models.TextField(max_length=5000)
     name = models.CharField(max_length=200)
-
-    def get_source_image(self):
-        main_dir = 'lessons/source_%d/'%self.id
-        return main_dir + 'image'
-
-    def def get_source_file(self):
-        main_dir = 'lessons/source_%d/'%self.id
-        return main_dir + 'file'
