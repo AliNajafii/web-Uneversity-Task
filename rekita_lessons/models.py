@@ -11,6 +11,9 @@ class CoursePanel(models.Model):
     primary_key = True
     )
 
+    course_code = models.CharField(db_index=True,
+    unique=True,max_length=100)
+
     lesson = models.OneToOneField(
     "rekita_users.Lesson",
     on_delete=models.CASCADE
@@ -23,15 +26,15 @@ class CoursePanel(models.Model):
 
     students = models.ManyToManyField(
     "rekita_users.Student",
-
+    null=True,blank=True
     )
 
     date_created = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"""
-        {self.lesson.name}-->{self.master.user.first_name}
-        {self.master.user.last_name} and ({self.objects.student_set.count()}) student/s"""
+        {self.lesson.title}-->{self.master.user.first_name}
+        {self.master.user.last_name} and ({self.students.count()}) student/s"""
     @classmethod
     def join_lesson(cls,user,key_code):
         """
@@ -41,9 +44,9 @@ class CoursePanel(models.Model):
         else it returns True and add student to CoursePanel
         """
         try:
-            student = user.F('student')
-            cp = cls.objects.get(key_code = key_code)
-            cp.objects.student_set.add(student)
+            student = user.student
+            cp = cls.objects.get(course_code = key_code)
+            cp.students.add(student)
             return True
         except models.ObjectDoesNotExist:
             return False
@@ -57,7 +60,7 @@ def default_deadline(self):
 
 def directory(instance,file_name):
     main_dir = instance.creator.get_main_dir()
-    return f'{main_dir}/{instance.cp.lesson.name}/task_{instance.id}/attach/{file_name}'
+    return f'{main_dir}/{instance.cp.lesson.title}/task_{instance.id}/attach/{file_name}'
 
 class Task(models.Model):
     description = models.CharField(max_length = 5000)
