@@ -1,18 +1,14 @@
 from django.db import models
 from django.shortcuts import reverse
 from rekita_lessons import models as lesson_model
+from django.contrib.auth import get_user_model
 __doc__ = """
 created by Ali Najafi on 12/12/2019 at 11:57 pm
 """
 
 class Person(models.Model):
-    from django.contrib.auth import get_user_model
 
-    user = models.OneToOneField(get_user_model(),
-    on_delete=models.CASCADE,
-    related_name = 'student')
-
-    last_loged = models.DateTimeField(auto_now=True)
+    last_logged = models.DateTimeField(auto_now=True)
 
     join_date = models.DateTimeField(auto_now_add=True)
 
@@ -21,6 +17,10 @@ def get_image(instance,f_name):
     return 'students/picture/{f_name}'
 
 class Student(Person):
+    user = models.OneToOneField(get_user_model(),
+    on_delete=models.CASCADE,
+    related_name = 'student')
+
     image = models.ImageField(
     upload_to = get_image
     )
@@ -70,6 +70,10 @@ class Student(Person):
 
 
 class Master(Person):
+    user = models.OneToOneField(get_user_model(),
+    on_delete=models.CASCADE,
+    related_name = 'master')
+
     uni = models.ForeignKey(
     "University",
     on_delete=models.CASCADE,
