@@ -9,7 +9,8 @@ class Person(models.Model):
     from django.contrib.auth import get_user_model
 
     user = models.OneToOneField(get_user_model(),
-    on_delete=models.CASCADE)
+    on_delete=models.CASCADE,
+    related_name = 'student')
 
     last_loged = models.DateTimeField(auto_now=True)
 
@@ -17,7 +18,7 @@ class Person(models.Model):
 
 
 def get_image(instance,f_name):
-    return f'{instance.get_main_dir()}/picture/{f_name}'
+    return 'students/picture/{f_name}'
 
 class Student(Person):
     image = models.ImageField(
@@ -160,11 +161,11 @@ class Lesson(models.Model):
 
 
 def get_source_image(instance,f_name):
-    main_dir = 'lessons/source_%d/'%instance.id
+    main_dir = 'lessons/source/'
     return main_dir + f'image/{f_name}'
 
 def  get_source_file(instance,f_name):
-    main_dir = 'lessons/source_%d/'%instance.id
+    main_dir = 'lessons/source/'
     return main_dir + f'file/{f_name}'
 
 
