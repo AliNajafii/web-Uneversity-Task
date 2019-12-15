@@ -50,7 +50,20 @@ class CoursePanel(models.Model):
             return True
         except models.ObjectDoesNotExist:
             return False
+    @classmethod
+    def create_course(cls,user,lesson,course_code):
+        master = None
+        try:
+            master = user.master
+        except:
+            return None
 
+        cp = cls.objects.create(master=master,
+        lesson=lesson,
+        course_code = course_code
+        )
+        cp.save()
+        return cp
 
 
 def default_deadline(self):
