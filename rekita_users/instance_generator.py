@@ -31,8 +31,8 @@ def make_bulk_attrri(number):
 def make_bulk_source(number):
     for i in range(number):
         src = models.Source.objects.create(
-        image = file_generator.random_image_dir(),
-        file = file_generator.random_file_dir(),
+        image = file_generator.random_image_dir(file_generator.files_dir),
+        file = file_generator.random_file_dir(file_generator.files_dir),
         description =f'this is test dicription {i}',
         name = f'test_name {i}'
         )
@@ -45,7 +45,7 @@ def make_bulk_lesson(number):
     for i in range(number):
         le = models.Lesson.objects.create(
         title = f'title_{i}',
-        image = file_generator.random_image_dir(),
+        image = file_generator.random_image_dir(file_generator.files_dir),
         source = models.Source.objects.get(id = random.randint(1,sources)),
         description = f"this is test description {i}",
         term = '9798'
