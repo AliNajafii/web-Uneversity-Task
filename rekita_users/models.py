@@ -2,13 +2,15 @@ from django.db import models
 from django.shortcuts import reverse
 from rekita_lessons import models as lesson_model
 from django.contrib.auth import get_user_model
+from django.utils.timezone import now
+from project import settings
 __doc__ = """
 created by Ali Najafi on 12/12/2019 at 11:57 pm
 """
 
 class Person(models.Model):
 
-    last_logged = models.DateTimeField(auto_now=True)
+    last_loged = models.DateTimeField(auto_now=True)
 
     join_date = models.DateTimeField(auto_now_add=True)
 
@@ -34,9 +36,11 @@ class Student(Person):
     "Field",
     on_delete=models.CASCADE
     )
+    def __str__(self):
+        return f"{self.user.username}"
 
     def get_main_dir(self):
-        return f'students/student_{self.id}'
+        return f'//students//student_{self.id}'
 
     def send_response(self,task_id,*args,**kwargs):
             """
@@ -44,11 +48,11 @@ class Student(Person):
                 to an exercise(Task). if the task DoesNotExists it returns False
 
             """
-            if type(cp_id) == int:
+            if type(task_id) == int:
                 try:
                     task = lesson_model.Task.objects.get(id = task_id)
                     res = lesson_model.Response.objects.create(
-                    task=task,*args,**kwargs
+                    task=task,student=self,*args,**kwargs
                     )
                     res.save()
                     return True
@@ -56,6 +60,19 @@ class Student(Person):
                     return False
             else:
                  return False
+    def is_sent_response(self,task_id):
+        """
+            returns false if a student sent a message to a spesific
+            Task.
+        """
+        try:
+            task = lesson_model.Task.objects.get(id=task_id)
+            res = task.response_set.get(student=self)
+            del task
+            del res
+            return True
+        except models.ObjectDoesNotExist:
+            return False
 
 
     def get_courspanels(self):
@@ -84,26 +101,30 @@ class Master(Person):
     on_delete=models.CASCADE
     )
 
+    def __str__(self):
+        return f"{self.user.username} "
+
     def get_main_dir(self):
         return f'masters/master_{self.id}'
 
 
-    def create_task(self,cp_id,*args,**kwargs):
+    def create_task(self,course_code,*args,**kwargs):
         """
             master can make tasks with this method.
             if cp_id is not integer itwould rturns False
             and if CoursePanel DoesNotExists via cp_id
             it returns False.
         """
-        if type(cp_id) == int:
-            try:
-                cp = lesson_model.CoursePanel.get(id=cp_id)
+
+        try:
+                cp = lesson_model.CoursePanel.objects.get(course_code=course_code)
                 task = lesson_model.Task.objects.create(
-                cp=cp,*args,**kwargs
+                cp=cp,creator=self,*args,**kwargs
                 )
                 task.save()
                 return True
-            except models.ObjectDoesNotExist:
+
+        except models.ObjectDoesNotExist:
                 return False
         else:
             return False
@@ -120,11 +141,16 @@ class University(models.Model):
     field = models.ManyToManyField(
     "Field"
     )
+    def __str__(self):
+        return f"{self.name}"
 
 class Field(models.Model):
 
     name = models.CharField(max_length = 256,unique=True)
     level = models.CharField(max_length = 256)
+
+    def __str__(self):
+        return f"{self.name}({self.level})"
 
 class Attribute(models.Model):
     """
@@ -140,6 +166,9 @@ class Attribute(models.Model):
     to_field='name'
     )
 
+    def __str__(self):
+        return f"{self.name}({self.field})"
+
 class Lesson(models.Model):
     title = models.CharField(max_length = 256)
     image = models.ImageField(
@@ -154,7 +183,8 @@ class Lesson(models.Model):
     description = models.TextField(max_length=5000)
     term_choice = [('9798','97-98'),('9899','98-99')]
     term = models.CharField(choices=term_choice,max_length=50)
-
+    def __str__(self):
+        return f"{self.title}"
     def get_courspanel(self):
         return self.objects.coursepanel
     def get_master(self):
@@ -182,3 +212,5 @@ class Source(models.Model):
     )
     description = models.TextField(max_length=5000)
     name = models.CharField(max_length=200)
+    def __str__(self):
+        return f"{self.name}"

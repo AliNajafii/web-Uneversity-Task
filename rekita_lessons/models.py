@@ -66,7 +66,7 @@ class CoursePanel(models.Model):
         return cp
 
 
-def default_deadline(self):
+def default_deadline():
     from django.utils import timezone
     delta = timezone.timedelta(days=7)
     return timezone.now() + delta
@@ -95,10 +95,6 @@ class Task(models.Model):
     )
 
 
-def directory_res(instance,f_name):
-    main_dir = instance.student.get_main_dir()
-    return f'{main_dir}/responses/response_{instance.date}/{f_name}'
-
 class Response(models.Model):
     task = models.ForeignKey(
     "Task",
@@ -111,6 +107,9 @@ class Response(models.Model):
     )
     date = models.DateTimeField(auto_now_add = True)
     file = models.FileField(
-    upload_to=directory_res
+    upload_to='responses'
     )
     description = models.TextField(max_length=5000)
+
+    def __str__(self):
+        return f'{self.student.user.username}'
